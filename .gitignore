@@ -3,4 +3,10 @@ elm-stuff
 # elm-repl generated files
 repl-temp-*
 
+# IDE
 .idea
+
+# Web stuff
+node_modules
+.cache
+dist
