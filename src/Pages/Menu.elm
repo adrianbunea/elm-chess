@@ -2,8 +2,8 @@ module Pages.Menu exposing (..)
 
 import Components.Modal as Modal exposing (Config, defaultConfig)
 import Html exposing (..)
-import Html.Attributes exposing (class, for, required, style)
-import Html.Events exposing (onSubmit)
+import Html.Attributes exposing (class, placeholder, required, type_, value)
+import Html.Events exposing (onInput, onSubmit)
 
 
 type alias Model =
@@ -111,4 +111,24 @@ menuOptions =
 
 introForm : FormFields -> Html Msg
 introForm { name } =
-    text "name"
+    let
+        title =
+            h1 [ class "form__title" ] [ text "You're new here! First time?" ]
+
+        nameInput =
+            label [ class "form__label" ]
+                [ input
+                    [ class "form__input"
+                    , value name
+                    , placeholder "Please enter your name to continue..."
+                    , onInput ChangeName
+                    , required True
+                    ]
+                    []
+                ]
+
+        submitButton =
+            input [ class "form__submit", type_ "submit" ] [ text "Continue" ]
+    in
+    form [ class "form", onSubmit SaveName ]
+        [ title, nameInput, submitButton ]
