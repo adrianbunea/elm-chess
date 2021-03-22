@@ -17,5 +17,8 @@
     "elm-hot": "^1.1.6",
     "node-elm-compiler": "^5.0.5",
     "parcel-bundler": "^1.12.5"
+  },
+  "dependencies": {
+    "html": "^1.0.0"
   }
 }
