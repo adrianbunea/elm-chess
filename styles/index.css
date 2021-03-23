@@ -1,9 +1,16 @@
 @import './modal.css';
 @import './form.css';
 @import './colors.css';
+@import './menu.css';
+@import './card.css';
+@import './layout.css';
+@import './button.css';
+@import './misc.css';
 
 html,
 body {
     margin: 0;
     padding: 0;
+
+    background-color: var(--theme-yellow);
 }

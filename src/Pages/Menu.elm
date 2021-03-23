@@ -2,7 +2,7 @@ module Pages.Menu exposing (..)
 
 import Components.Modal as Modal exposing (Config, defaultConfig)
 import Html exposing (..)
-import Html.Attributes exposing (class, placeholder, required, type_, value)
+import Html.Attributes exposing (class, href, placeholder, required, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 
 
@@ -28,16 +28,20 @@ init : ( Model, Cmd Msg )
 init =
     let
         playerName =
-            ""
+            Just "Adrian"
 
         modalConfig =
             { defaultConfig
                 | isVisible =
-                    if playerName == "" then
-                        True
+                    case playerName of
+                        Just "" ->
+                            True
 
-                    else
-                        False
+                        Nothing ->
+                            True
+
+                        _ ->
+                            False
             }
 
         formFields =
@@ -45,7 +49,7 @@ init =
             }
 
         model =
-            { playerName = Nothing
+            { playerName = playerName
             , formFields = formFields
             , modalConfig = modalConfig
             }
@@ -89,7 +93,7 @@ view model =
         welcomeMessage =
             case model.playerName of
                 Just playerName ->
-                    h1 [] [ text playerName ]
+                    h1 [ class "welcome-message" ] [ text ("Hi, " ++ playerName ++ "!") ]
 
                 Nothing ->
                     text ""
@@ -97,16 +101,22 @@ view model =
         modal =
             model.modalConfig
                 |> Modal.view [ introForm model.formFields ]
+
+        menu =
+            card
     in
-    div [ class "container" ]
+    div [ class "container container--column" ]
         [ welcomeMessage
+        , menu
         , modal
         ]
 
 
-menuOptions : Html Msg
+menuOptions : List (Html msg)
 menuOptions =
-    text ""
+    [ a [ class "button button--primary menu__button", href "#" ] [ text "Play" ]
+    , a [ class "button button--primary menu__button", href "#" ] [ text "Settings" ]
+    ]
 
 
 introForm : FormFields -> Html Msg
@@ -128,7 +138,13 @@ introForm { name } =
                 ]
 
         submitButton =
-            input [ class "form__submit", type_ "submit" ] [ text "Continue" ]
+            input [ class "button button--primary", type_ "submit" ] [ text "Continue" ]
     in
     form [ class "form", onSubmit SaveName ]
         [ title, nameInput, submitButton ]
+
+
+card : Html msg
+card =
+    nav [ class "menu" ]
+        menuOptions

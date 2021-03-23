@@ -1,0 +1,31 @@
+.button {
+    color: var(--font-color);
+    font-weight: bold;
+    text-decoration: none;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+.button:hover {
+    filter: brightness(0.95);
+    cursor: pointer;
+}
+
+.button:focus,active {
+    outline: none;
+}
+
+.button--primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.button--secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.button--outlined {
+    background-color: unset;
+}
