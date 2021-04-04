@@ -1,22 +1,33 @@
 module Pages.Play exposing (..)
 
-import Html exposing (..)
+import Components.Board as Board exposing (Board)
+import Components.Square exposing (Square)
+import Html.Styled exposing (Html, button, div, text)
+import Html.Styled.Events exposing (onClick)
+import Types exposing (ChessColor(..))
 
 
 type alias Model =
-    { message : String
+    { playerColor : ChessColor
+    , playerTurn : ChessColor
+    , selectedSquare : Maybe Square
+    , board : Board
     }
 
 
 type Msg
-    = NoOp
+    = SwitchSides
+    | NoOp
 
 
 init : ( Model, Cmd Msg )
 init =
     let
         model =
-            { message = "Let's play!"
+            { playerColor = White
+            , playerTurn = White
+            , selectedSquare = Nothing
+            , board = Board.init
             }
     in
     ( model, Cmd.none )
@@ -25,7 +36,20 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp -> ( model, Cmd.none )
+        SwitchSides ->
+            let
+                newPlayerColor =
+                    case model.playerColor of
+                        White ->
+                            Black
+
+                        Black ->
+                            White
+            in
+            ( { model | playerColor = newPlayerColor }, Cmd.none )
+
+        NoOp ->
+            ( model, Cmd.none )
 
 
 
@@ -34,5 +58,7 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    h1 [] [ text model.message ]
-
+    div []
+        [ Board.view model.playerColor model.board
+        , button [ onClick SwitchSides ] [ text "Switch sides" ]
+        ]

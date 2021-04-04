@@ -3,11 +3,11 @@ module Main exposing (..)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Html exposing (..)
+import Html.Styled
 import Pages.Menu as Menu
 import Pages.Play as Play
 import Route exposing (Route)
 import Url exposing (Url)
-
 
 
 type alias Model =
@@ -82,14 +82,12 @@ initCurrentPage ( model, existingCmds ) =
 -- UPDATE
 
 
-
 type Msg
     = LinkClicked UrlRequest
     | UrlChanged Url
     | MenuPageMsg Menu.Msg
     | PlayPageMsg Play.Msg
     | NoOp
-
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -160,7 +158,8 @@ currentView model =
 
         PlayPage pageModel ->
             Play.view pageModel
-                |> Html.map PlayPageMsg
+                |> Html.Styled.map PlayPageMsg
+                |> Html.Styled.toUnstyled
 
 
 notFoundView : Html msg

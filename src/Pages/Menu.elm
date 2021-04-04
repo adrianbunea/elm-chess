@@ -28,7 +28,7 @@ init : ( Model, Cmd Msg )
 init =
     let
         playerName =
-            Just "Adrian"
+            Nothing
 
         modalConfig =
             { defaultConfig
@@ -114,7 +114,7 @@ view model =
 
 menuOptions : List (Html msg)
 menuOptions =
-    [ a [ class "button button--primary menu__button", href "#" ] [ text "Play" ]
+    [ a [ class "button button--primary menu__button", href "play" ] [ text "Play" ]
     , a [ class "button button--primary menu__button", href "#" ] [ text "Settings" ]
     ]
 
