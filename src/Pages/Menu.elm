@@ -1,14 +1,22 @@
 module Pages.Menu exposing (..)
 
+import Components.IntroForm as IntroForm
+import Components.Menu as Menu
 import Components.Modal as Modal exposing (Config, defaultConfig)
-import Html exposing (..)
-import Html.Attributes exposing (class, href, placeholder, required, type_, value)
-import Html.Events exposing (onInput, onSubmit)
+import Css exposing (Style, color, column, flexDirection, fontSize, rem)
+import Html.Styled as Html exposing (Attribute, Html, div, h1, text)
+import Html.Styled.Attributes exposing (css)
+import Styles as Styles
+import Theme.Color as Color
+
+
+
+-- MODEL
 
 
 type alias Model =
     { playerName : Maybe String
-    , formFields : FormFields
+    , introFormConfig : IntroForm.Config
     , modalConfig : Modal.Config Msg
     }
 
@@ -20,8 +28,7 @@ type alias FormFields =
 
 type Msg
     = NoOp
-    | ChangeName String
-    | SaveName
+    | GotIntroFormMsg IntroForm.Msg
 
 
 init : ( Model, Cmd Msg )
@@ -44,47 +51,17 @@ init =
                             False
             }
 
-        formFields =
-            { name = ""
-            }
-
         model =
             { playerName = playerName
-            , formFields = formFields
+            , introFormConfig = IntroForm.defaultConfig
             , modalConfig = modalConfig
             }
     in
     ( model, Cmd.none )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        NoOp ->
-            ( model, Cmd.none )
 
-        ChangeName inputValue ->
-            let
-                formFields =
-                    model.formFields
-            in
-            ( { model | formFields = { formFields | name = inputValue } }, Cmd.none )
-
-        SaveName ->
-            let
-                modalConfig =
-                    model.modalConfig
-            in
-            ( { playerName = Just model.formFields.name
-              , formFields = model.formFields
-              , modalConfig = { modalConfig | isVisible = False }
-              }
-            , Cmd.none
-            )
-
-
-
--- VIEWS
+-- VIEW
 
 
 view : Model -> Html Msg
@@ -93,58 +70,77 @@ view model =
         welcomeMessage =
             case model.playerName of
                 Just playerName ->
-                    h1 [ class "welcome-message" ] [ text ("Hi, " ++ playerName ++ "!") ]
+                    h1 [ css welcomeMessageStyles ] [ text ("Hi, " ++ playerName ++ "!") ]
 
                 Nothing ->
                     text ""
 
+        introForm =
+            IntroForm.view model.introFormConfig |> Html.map GotIntroFormMsg
+
         modal =
             model.modalConfig
-                |> Modal.view [ introForm model.formFields ]
-
-        menu =
-            card
+                |> Modal.view [ introForm ]
     in
-    div [ class "container container--column" ]
+    div [ css (flexDirection column :: Styles.container) ]
         [ welcomeMessage
-        , menu
+        , Menu.view
         , modal
         ]
 
 
-menuOptions : List (Html msg)
-menuOptions =
-    [ a [ class "button button--primary menu__button", href "play" ] [ text "Play" ]
-    , a [ class "button button--primary menu__button", href "#" ] [ text "Settings" ]
+welcomeMessageStyles : List Style
+welcomeMessageStyles =
+    [ fontSize (rem 3)
+    , color (Color.getHexColor Color.theme.neutral.greyDarkest)
     ]
 
 
-introForm : FormFields -> Html Msg
-introForm { name } =
+
+-- UPDATE
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        GotIntroFormMsg subMsg ->
+            let
+                newModel =
+                    handleIntroFormMessage subMsg model
+            in
+            ( newModel, Cmd.none )
+
+
+handleIntroFormMessage : IntroForm.Msg -> Model -> Model
+handleIntroFormMessage subMsg model =
     let
-        title =
-            h1 [ class "form__title" ] [ text "You're new here! First time?" ]
+        newIntroFormConfig =
+            IntroForm.update subMsg model.introFormConfig
 
-        nameInput =
-            label [ class "form__label" ]
-                [ input
-                    [ class "form__input"
-                    , value name
-                    , placeholder "Please enter your name to continue..."
-                    , onInput ChangeName
-                    , required True
-                    ]
-                    []
-                ]
+        newPlayerName =
+            case subMsg of
+                IntroForm.SaveName playerName ->
+                    Just playerName
 
-        submitButton =
-            input [ class "button button--primary", type_ "submit" ] [ text "Continue" ]
+                _ ->
+                    model.playerName
+
+        modalConfig =
+            model.modalConfig
+
+        newModalConfig =
+            case subMsg of
+                IntroForm.SaveName _ ->
+                    { modalConfig | isVisible = False }
+
+                _ ->
+                    modalConfig
     in
-    form [ class "form", onSubmit SaveName ]
-        [ title, nameInput, submitButton ]
-
-
-card : Html msg
-card =
-    nav [ class "menu" ]
-        menuOptions
+    { model
+        | playerName = newPlayerName
+        , introFormConfig = newIntroFormConfig
+        , modalConfig = newModalConfig
+    }

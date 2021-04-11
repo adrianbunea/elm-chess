@@ -2,8 +2,7 @@ module Main exposing (..)
 
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
-import Html exposing (..)
-import Html.Styled
+import Html.Styled as Html exposing (Html, h3, text)
 import Pages.Menu as Menu
 import Pages.Play as Play
 import Route exposing (Route)
@@ -142,7 +141,7 @@ update msg model =
 view : Model -> Document Msg
 view model =
     { title = "Chess Game"
-    , body = [ currentView model ]
+    , body = [ currentView model |> Html.toUnstyled ]
     }
 
 
@@ -158,8 +157,7 @@ currentView model =
 
         PlayPage pageModel ->
             Play.view pageModel
-                |> Html.Styled.map PlayPageMsg
-                |> Html.Styled.toUnstyled
+                |> Html.map PlayPageMsg
 
 
 notFoundView : Html msg

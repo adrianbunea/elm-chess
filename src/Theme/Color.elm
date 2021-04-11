@@ -1,4 +1,4 @@
-module Theme.Color exposing (Color, getColor, getHexColor, theme, themeColorToRgba)
+module Theme.Color exposing (Color, colorToRgba, getColor, getHexColor, theme)
 
 import Color
 import Color.Convert
@@ -198,8 +198,8 @@ getHexColor =
     getColor >> Color.Convert.colorToHex >> Css.hex
 
 
-themeColorToRgba : Color -> Float -> String
-themeColorToRgba color alpha =
+colorToRgba : Color -> Float -> Css.Color
+colorToRgba color alpha =
     let
         rgbaColor =
             Color.toRgba (getColor color)
@@ -207,4 +207,4 @@ themeColorToRgba color alpha =
         transparency =
             { rgbaColor | alpha = alpha }
     in
-    Color.Convert.colorToCssRgba (Color.fromRgba transparency)
+    Css.rgba (floor transparency.red) (floor transparency.green) (floor transparency.blue) transparency.alpha

@@ -1,12 +1,16 @@
 module Components.Square exposing (..)
 
 import Components.Piece as Piece exposing (Piece(..))
-import Css exposing (backgroundColor, borderRadius, boxShadow5, deg, hover, px, rem, rotate3d, transforms, translate3d)
+import Css exposing (Style, backgroundColor, borderRadius, boxShadow5, deg, hover, px, rem, rotate3d, transforms, translate3d)
 import Css.Transitions as Transitions exposing (transition)
 import Html.Styled exposing (Attribute, Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import Theme.Color as Color
 import Types exposing (ChessColor(..))
+
+
+
+-- MODEL
 
 
 type Square
@@ -78,6 +82,11 @@ init row col =
     Square { row = row, col = col } piece
 
 
+setPiece : Square -> Piece -> Square
+setPiece (Square { row, col } _) newPiece =
+    Square { row = row, col = col } (Just newPiece)
+
+
 
 -- VIEW
 
@@ -101,14 +110,18 @@ view isRotated (Square { row, col } piece) =
                     text ""
     in
     div
-        [ squareStyle isRotated squareColor
+        [ css (squareStyles isRotated squareColor)
         ]
         [ pieceIcon
         ]
 
 
-squareStyle : Bool -> ChessColor -> Attribute msg
-squareStyle isRotated squareColor =
+
+-- STYLES
+
+
+squareStyles : Bool -> ChessColor -> List Style
+squareStyles isRotated squareColor =
     let
         squareBackgroundColor =
             case squareColor of
@@ -126,28 +139,21 @@ squareStyle isRotated squareColor =
                 []
 
         hoverStyles =
-            hover
-                [ boxShadow5 (px 0) (px 7) (px 4) (px 0) (Color.getHexColor Color.theme.neutral.greyDarker)
-                , if isRotated then
-                    transforms
-                        (rotationTransforms ++ [ translate3d (px 0) (px 0) (px -20) ])
+            [ boxShadow5 (px 0) (px 7) (px 4) (px 0) (Color.getHexColor Color.theme.neutral.greyDarker)
+            , if isRotated then
+                transforms
+                    (rotationTransforms ++ [ translate3d (px 0) (px 0) (px -20) ])
 
-                  else
-                    transforms
-                        [ translate3d (px 0) (px 0) (px -20)
-                        ]
-                ]
+              else
+                transforms
+                    [ translate3d (px 0) (px 0) (px -20)
+                    ]
+            ]
     in
-    css
-        [ backgroundColor squareBackgroundColor
-        , borderRadius (rem 1)
-        , boxShadow5 (px 0) (px 12) (px 8) (px 0) (Color.getHexColor Color.theme.neutral.greyDark)
-        , transforms rotationTransforms
-        , transition [ Transitions.transform 250, Transitions.boxShadow 250 ]
-        , hoverStyles
-        ]
-
-
-setPiece : Square -> Piece -> Square
-setPiece (Square { row, col } _) newPiece =
-    Square { row = row, col = col } (Just newPiece)
+    [ backgroundColor squareBackgroundColor
+    , borderRadius (rem 1)
+    , boxShadow5 (px 0) (px 12) (px 8) (px 0) (Color.getHexColor Color.theme.neutral.greyDark)
+    , transforms rotationTransforms
+    , transition [ Transitions.transform 250, Transitions.boxShadow 250 ]
+    , hover hoverStyles
+    ]

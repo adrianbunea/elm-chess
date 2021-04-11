@@ -1,10 +1,14 @@
 module Pages.Play exposing (..)
 
 import Components.Board as Board exposing (Board)
+import Components.Button as Button
 import Components.Square exposing (Square)
-import Html.Styled exposing (Html, button, div, text)
-import Html.Styled.Events exposing (onClick)
+import Html.Styled exposing (Html, div)
 import Types exposing (ChessColor(..))
+
+
+
+-- MODEl
 
 
 type alias Model =
@@ -13,11 +17,6 @@ type alias Model =
     , selectedSquare : Maybe Square
     , board : Board
     }
-
-
-type Msg
-    = SwitchSides
-    | NoOp
 
 
 init : ( Model, Cmd Msg )
@@ -31,6 +30,31 @@ init =
             }
     in
     ( model, Cmd.none )
+
+
+
+-- VIEWS
+
+
+view : Model -> Html Msg
+view model =
+    div []
+        [ Board.view model.playerColor model.board
+        , Button.view
+            (Button.defaultButtonConfig
+                |> Button.withLabel "Switch sides"
+                |> Button.withAction SwitchSides
+            )
+        ]
+
+
+
+-- UPDATE
+
+
+type Msg
+    = SwitchSides
+    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -50,15 +74,3 @@ update msg model =
 
         NoOp ->
             ( model, Cmd.none )
-
-
-
--- VIEWS
-
-
-view : Model -> Html Msg
-view model =
-    div []
-        [ Board.view model.playerColor model.board
-        , button [ onClick SwitchSides ] [ text "Switch sides" ]
-        ]

@@ -1,7 +1,7 @@
 module Components.Icon exposing (close)
 
-import Html exposing (Html, span, text)
-import Html.Attributes exposing (class)
+import Html.Styled exposing (Html, span, text)
+import Html.Styled.Attributes exposing (class)
 
 
 icon : String -> Html msg
