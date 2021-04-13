@@ -6,6 +6,7 @@ import Components.Modal as Modal exposing (Config, defaultConfig)
 import Css exposing (Style, color, column, flexDirection, fontSize, rem)
 import Html.Styled as Html exposing (Attribute, Html, div, h1, text)
 import Html.Styled.Attributes exposing (css)
+import Store exposing (Store)
 import Styles as Styles
 import Theme.Color as Color
 
@@ -15,7 +16,7 @@ import Theme.Color as Color
 
 
 type alias Model =
-    { playerName : Maybe String
+    { store : Store
     , introFormConfig : IntroForm.Config
     , modalConfig : Modal.Config Msg
     }
@@ -31,20 +32,14 @@ type Msg
     | GotIntroFormMsg IntroForm.Msg
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Store -> ( Model, Cmd Msg )
+init store =
     let
-        playerName =
-            Nothing
-
         modalConfig =
             { defaultConfig
                 | isVisible =
-                    case playerName of
-                        Just "" ->
-                            True
-
-                        Nothing ->
+                    case store.playerName of
+                        "" ->
                             True
 
                         _ ->
@@ -52,7 +47,7 @@ init =
             }
 
         model =
-            { playerName = playerName
+            { store = store
             , introFormConfig = IntroForm.defaultConfig
             , modalConfig = modalConfig
             }
@@ -68,12 +63,12 @@ view : Model -> Html Msg
 view model =
     let
         welcomeMessage =
-            case model.playerName of
-                Just playerName ->
-                    h1 [ css welcomeMessageStyles ] [ text ("Hi, " ++ playerName ++ "!") ]
-
-                Nothing ->
+            case model.store.playerName of
+                "" ->
                     text ""
+
+                playerName ->
+                    h1 [ css welcomeMessageStyles ] [ text ("Hi, " ++ playerName ++ "!") ]
 
         introForm =
             IntroForm.view model.introFormConfig |> Html.map GotIntroFormMsg
@@ -108,13 +103,13 @@ update msg model =
 
         GotIntroFormMsg subMsg ->
             let
-                newModel =
+                ( newModel, cmd ) =
                     handleIntroFormMessage subMsg model
             in
-            ( newModel, Cmd.none )
+            ( newModel, cmd )
 
 
-handleIntroFormMessage : IntroForm.Msg -> Model -> Model
+handleIntroFormMessage : IntroForm.Msg -> Model -> ( Model, Cmd Msg )
 handleIntroFormMessage subMsg model =
     let
         newIntroFormConfig =
@@ -123,10 +118,16 @@ handleIntroFormMessage subMsg model =
         newPlayerName =
             case subMsg of
                 IntroForm.SaveName playerName ->
-                    Just playerName
+                    playerName
 
                 _ ->
-                    model.playerName
+                    model.store.playerName
+
+        store =
+            model.store
+
+        newStore =
+            { store | playerName = newPlayerName }
 
         modalConfig =
             model.modalConfig
@@ -138,9 +139,19 @@ handleIntroFormMessage subMsg model =
 
                 _ ->
                     modalConfig
+
+        cmd =
+            case subMsg of
+                IntroForm.SaveName _ ->
+                    Store.save newStore
+
+                _ ->
+                    Cmd.none
     in
-    { model
-        | playerName = newPlayerName
+    ( { model
+        | store = newStore
         , introFormConfig = newIntroFormConfig
         , modalConfig = newModalConfig
-    }
+      }
+    , cmd
+    )

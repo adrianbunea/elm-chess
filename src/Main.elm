@@ -6,13 +6,20 @@ import Html.Styled as Html exposing (Html, h3, text)
 import Pages.Menu as Menu
 import Pages.Play as Play
 import Route exposing (Route)
+import Store exposing (Store)
 import Url exposing (Url)
+
+
+type alias Flags =
+    { playerName : String
+    }
 
 
 type alias Model =
     { route : Route
     , page : Page
     , navKey : Nav.Key
+    , store : Store
     }
 
 
@@ -22,7 +29,7 @@ type Page
     | PlayPage Play.Model
 
 
-main : Program () Model Msg
+main : Program Flags Model Msg
 main =
     Browser.application
         { init = init
@@ -38,13 +45,14 @@ main =
 -- MODEL
 
 
-init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url navKey =
     let
         model =
             { route = Route.parseUrl url
             , page = NotFoundPage
             , navKey = navKey
+            , store = flags
             }
     in
     initCurrentPage ( model, Cmd.none )
@@ -61,7 +69,7 @@ initCurrentPage ( model, existingCmds ) =
                 Route.Menu ->
                     let
                         ( pageModel, pageCmds ) =
-                            Menu.init
+                            Menu.init model.store
                     in
                     ( MenuPage pageModel, Cmd.map MenuPageMsg pageCmds )
 
