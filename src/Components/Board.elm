@@ -1,8 +1,9 @@
-module Components.Board exposing (..)
+module Components.Board exposing (Board, Msg(..), init, update, view)
 
+import Array exposing (Array)
 import Components.Square as Square exposing (Square)
 import Css exposing (Style, deg, preserve3d, property, rotate3d, transformStyle, transforms)
-import Html.Styled exposing (Attribute, Html, div)
+import Html.Styled as Html exposing (Attribute, Html, div)
 import Html.Styled.Attributes exposing (css)
 import Styles as Style
 import Types exposing (ChessColor(..))
@@ -13,7 +14,11 @@ import Types exposing (ChessColor(..))
 
 
 type Board
-    = Board (List Square)
+    = Board (Matrix Square)
+
+
+type alias Matrix a =
+    Array (Array a)
 
 
 init : Board
@@ -21,12 +26,13 @@ init =
     let
         squares =
             [ 0, 1, 2, 3, 4, 5, 6, 7 ]
-                |> List.map cols
-                |> List.concat
+                |> Array.fromList
+                |> Array.map cols
 
         cols row =
             [ 0, 1, 2, 3, 4, 5, 6, 7 ]
-                |> List.map (Square.init row)
+                |> Array.fromList
+                |> Array.map (Square.init row)
     in
     Board squares
 
@@ -35,7 +41,7 @@ init =
 -- VIEW
 
 
-view : ChessColor -> Board -> Html msg
+view : ChessColor -> Board -> Html Msg
 view playerColor (Board squares) =
     let
         isRotated =
@@ -45,10 +51,22 @@ view playerColor (Board squares) =
 
                 Black ->
                     True
+
+        squareView square =
+            square
+                |> Square.view isRotated
+                |> Html.map (GotSquareMsg square)
+
+        squaresView =
+            squares
+                |> Array.toList
+                |> List.map Array.toList
+                |> List.concat
+                |> List.map squareView
     in
     div [ css (boardPerspectiveStyles ++ Style.container) ]
         [ div [ css (boardStyles isRotated) ]
-            (List.map (Square.view isRotated) squares)
+            squaresView
         ]
 
 
@@ -88,3 +106,57 @@ boardPerspectiveStyles =
 
     -- elm/css doesn't support perspective too well
     ]
+
+
+
+-- UPDATE
+
+
+type Msg
+    = GotSquareMsg Square Square.Msg
+
+
+update : Msg -> Board -> ( Board, Cmd Msg )
+update msg board =
+    case msg of
+        GotSquareMsg square subMsg ->
+            let
+                ( newSquare, squareCmd ) =
+                    handleSquareMsg subMsg square
+            in
+            ( setSquare newSquare board, Cmd.map (GotSquareMsg square) squareCmd )
+
+
+handleSquareMsg : Square.Msg -> Square -> ( Square, Cmd Square.Msg )
+handleSquareMsg squareMsg square =
+    Square.update squareMsg square
+
+
+
+-- HELPERS
+
+
+setSquare : Square -> Board -> Board
+setSquare square (Board squares) =
+    let
+        { row, col } =
+            Square.getPosition square
+
+        squareCol =
+            Array.get row squares
+
+        newSquareCol =
+            squareCol
+                |> Maybe.map (Array.set col square)
+
+        newBoard =
+            case newSquareCol of
+                Nothing ->
+                    Board squares
+
+                Just newSquareCol_ ->
+                    squares
+                        |> Array.set row newSquareCol_
+                        |> Board
+    in
+    newBoard

@@ -1,10 +1,11 @@
-module Components.Square exposing (..)
+module Components.Square exposing (Msg(..), Square, getPosition, init, setPiece, update, view)
 
 import Components.Piece as Piece exposing (Piece(..))
-import Css exposing (Style, backgroundColor, borderRadius, boxShadow5, deg, hover, px, rem, rotate3d, transforms, translate3d)
+import Css exposing (Style, backgroundColor, borderRadius, borderStyle, boxShadow5, deg, hover, none, px, rem, rotate3d, transforms, translate3d)
 import Css.Transitions as Transitions exposing (transition)
-import Html.Styled exposing (Attribute, Html, div, text)
+import Html.Styled exposing (Attribute, Html, button, div, text)
 import Html.Styled.Attributes exposing (css)
+import Html.Styled.Events exposing (onClick)
 import Theme.Color as Color
 import Types exposing (ChessColor(..))
 
@@ -14,7 +15,14 @@ import Types exposing (ChessColor(..))
 
 
 type Square
-    = Square { row : Int, col : Int } (Maybe Piece)
+    = Square Attributes (Maybe Piece)
+
+
+type alias Attributes =
+    { row : Int
+    , col : Int
+    , selected : Bool
+    }
 
 
 init : Int -> Int -> Square
@@ -41,10 +49,10 @@ init row col =
                     Just (Bishop White)
 
                 ( 7, 3 ) ->
-                    Just (King White)
+                    Just (Queen White)
 
                 ( 7, 4 ) ->
-                    Just (Queen White)
+                    Just (King White)
 
                 ( 6, _ ) ->
                     Just (Pawn White)
@@ -68,10 +76,10 @@ init row col =
                     Just (Bishop Black)
 
                 ( 0, 3 ) ->
-                    Just (King Black)
+                    Just (Queen Black)
 
                 ( 0, 4 ) ->
-                    Just (Queen Black)
+                    Just (King Black)
 
                 ( 1, _ ) ->
                     Just (Pawn Black)
@@ -79,23 +87,28 @@ init row col =
                 _ ->
                     Nothing
     in
-    Square { row = row, col = col } piece
+    Square
+        { row = row
+        , col = col
+        , selected = False
+        }
+        piece
 
 
 setPiece : Square -> Piece -> Square
-setPiece (Square { row, col } _) newPiece =
-    Square { row = row, col = col } (Just newPiece)
+setPiece (Square attributes _) newPiece =
+    Square attributes (Just newPiece)
 
 
 
 -- VIEW
 
 
-view : Bool -> Square -> Html msg
-view isRotated (Square { row, col } piece) =
+view : Bool -> Square -> Html Msg
+view isRotated (Square attributes piece) =
     let
         squareColor =
-            if modBy 2 (row + col) == 0 then
+            if modBy 2 (attributes.row + attributes.col) == 0 then
                 White
 
             else
@@ -109,8 +122,9 @@ view isRotated (Square { row, col } piece) =
                 Nothing ->
                     text ""
     in
-    div
-        [ css (squareStyles isRotated squareColor)
+    button
+        [ onClick Touched
+        , css (squareStyles attributes isRotated squareColor)
         ]
         [ pieceIcon
         ]
@@ -120,16 +134,19 @@ view isRotated (Square { row, col } piece) =
 -- STYLES
 
 
-squareStyles : Bool -> ChessColor -> List Style
-squareStyles isRotated squareColor =
+squareStyles : Attributes -> Bool -> ChessColor -> List Style
+squareStyles attributes isRotated squareColor =
     let
         squareBackgroundColor =
-            case squareColor of
-                White ->
+            case ( squareColor, attributes.selected ) of
+                ( White, False ) ->
                     Color.getHexColor Color.theme.brand.primaryVariant
 
-                Black ->
+                ( Black, False ) ->
                     Color.getHexColor Color.theme.neutral.greyDarkest
+
+                ( _, True ) ->
+                    Color.getHexColor Color.theme.brand.secondary
 
         rotationTransforms =
             if isRotated then
@@ -151,9 +168,51 @@ squareStyles isRotated squareColor =
             ]
     in
     [ backgroundColor squareBackgroundColor
+    , borderStyle none
     , borderRadius (rem 1)
     , boxShadow5 (px 0) (px 12) (px 8) (px 0) (Color.getHexColor Color.theme.neutral.greyDark)
     , transforms rotationTransforms
     , transition [ Transitions.transform 250, Transitions.boxShadow 250 ]
     , hover hoverStyles
     ]
+
+
+
+-- UPDATE
+
+
+type Msg
+    = Touched
+
+
+update : Msg -> Square -> ( Square, Cmd Msg )
+update msg square =
+    case msg of
+        Touched ->
+            let
+                selected =
+                    getSelected square |> not
+
+                newSquare =
+                    setSelected selected square
+            in
+            ( newSquare, Cmd.none )
+
+
+
+-- HELPERS
+
+
+getSelected : Square -> Bool
+getSelected (Square { selected } _) =
+    selected
+
+
+setSelected : Bool -> Square -> Square
+setSelected selected (Square attributes piece) =
+    Square { attributes | selected = selected } piece
+
+
+getPosition : Square -> { row : Int, col : Int }
+getPosition (Square { row, col } _) =
+    { row = row, col = col }

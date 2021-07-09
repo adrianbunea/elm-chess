@@ -3,7 +3,7 @@ module Pages.Play exposing (..)
 import Components.Board as Board exposing (Board)
 import Components.Button as Button
 import Components.Square exposing (Square)
-import Html.Styled exposing (Html, div)
+import Html.Styled as Html exposing (Html, div)
 import Types exposing (ChessColor(..))
 
 
@@ -38,8 +38,13 @@ init =
 
 view : Model -> Html Msg
 view model =
+    let
+        boardView =
+            Board.view model.playerColor model.board
+                |> Html.map GotBoardMsg
+    in
     div []
-        [ Board.view model.playerColor model.board
+        [ boardView
         , Button.view
             (Button.defaultButtonConfig
                 |> Button.withLabel "Switch sides"
@@ -54,6 +59,7 @@ view model =
 
 type Msg
     = SwitchSides
+    | GotBoardMsg Board.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -70,3 +76,15 @@ update msg model =
                             White
             in
             ( { model | playerColor = newPlayerColor }, Cmd.none )
+
+        GotBoardMsg subMsg ->
+            let
+                ( newBoard, boardCmd ) =
+                    handleBoardMsg subMsg model.board
+            in
+            ( { model | board = newBoard }, Cmd.map GotBoardMsg boardCmd )
+
+
+handleBoardMsg : Board.Msg -> Board -> ( Board, Cmd Board.Msg )
+handleBoardMsg boardMsg boardModel =
+    Board.update boardMsg boardModel
