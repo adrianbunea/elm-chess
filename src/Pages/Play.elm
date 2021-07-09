@@ -54,7 +54,6 @@ view model =
 
 type Msg
     = SwitchSides
-    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -71,6 +70,3 @@ update msg model =
                             White
             in
             ( { model | playerColor = newPlayerColor }, Cmd.none )
-
-        NoOp ->
-            ( model, Cmd.none )

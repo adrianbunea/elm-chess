@@ -94,7 +94,6 @@ type Msg
     | UrlChanged Url
     | MenuPageMsg Menu.Msg
     | PlayPageMsg Play.Msg
-    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

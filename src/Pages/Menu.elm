@@ -28,8 +28,7 @@ type alias FormFields =
 
 
 type Msg
-    = NoOp
-    | GotIntroFormMsg IntroForm.Msg
+    = GotIntroFormMsg IntroForm.Msg
 
 
 init : Store -> ( Model, Cmd Msg )
@@ -98,9 +97,6 @@ welcomeMessageStyles =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         GotIntroFormMsg subMsg ->
             let
                 ( newModel, cmd ) =
