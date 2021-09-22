@@ -78,13 +78,6 @@ view model =
         ]
 
 
-welcomeMessageStyles : List Style
-welcomeMessageStyles =
-    [ fontSize (rem 3)
-    , color (Color.getHexColor Color.theme.neutral.greyDarkest)
-    ]
-
-
 
 -- UPDATE
 
@@ -115,3 +108,14 @@ update msg model =
                     { store | playerName = playerName }
             in
             ( { model | store = newStore, modal = modal }, Store.save newStore )
+
+
+
+-- STYLES
+
+
+welcomeMessageStyles : List Style
+welcomeMessageStyles =
+    [ fontSize (rem 3)
+    , color (Color.getHexColor Color.theme.neutral.greyDarkest)
+    ]
