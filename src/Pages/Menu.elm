@@ -2,7 +2,7 @@ module Pages.Menu exposing (..)
 
 import Components.IntroForm as IntroForm
 import Components.Menu as Menu
-import Components.Modal as Modal exposing (Config, defaultConfig)
+import Components.Modal as Modal
 import Css exposing (Style, color, column, flexDirection, fontSize, rem)
 import Html.Styled as Html exposing (Attribute, Html, div, h1, text)
 import Html.Styled.Attributes exposing (css)
@@ -17,8 +17,8 @@ import Theme.Color as Color
 
 type alias Model =
     { store : Store
-    , introFormConfig : IntroForm.Config
-    , modalConfig : Modal.Config Msg
+    , modal : Modal.State
+    , introForm : IntroForm.State
     }
 
 
@@ -27,28 +27,23 @@ type alias FormFields =
     }
 
 
-type Msg
-    = GotIntroFormMsg IntroForm.Msg
-
-
 init : Store -> ( Model, Cmd Msg )
 init store =
     let
-        modalConfig =
-            { defaultConfig
-                | isVisible =
-                    case store.playerName of
+        modal =
+            Modal.init
+                |> (case store.playerName of
                         "" ->
-                            True
+                            Modal.open
 
                         _ ->
-                            False
-            }
+                            Modal.close
+                   )
 
         model =
             { store = store
-            , introFormConfig = IntroForm.defaultConfig
-            , modalConfig = modalConfig
+            , modal = modal
+            , introForm = IntroForm.init
             }
     in
     ( model, Cmd.none )
@@ -70,11 +65,11 @@ view model =
                     h1 [ css welcomeMessageStyles ] [ text ("Hi, " ++ playerName ++ "!") ]
 
         introForm =
-            IntroForm.view model.introFormConfig |> Html.map GotIntroFormMsg
+            IntroForm.view IntroFormChanged FormSaved model.introForm
 
         modal =
-            model.modalConfig
-                |> Modal.view [ introForm ]
+            model.modal
+                |> Modal.view [ introForm ] Nothing Nothing
     in
     div [ css (flexDirection column :: Styles.container) ]
         [ welcomeMessage
@@ -83,71 +78,44 @@ view model =
         ]
 
 
-welcomeMessageStyles : List Style
-welcomeMessageStyles =
-    [ fontSize (rem 3)
-    , color (Color.getHexColor Color.theme.neutral.greyDarkest)
-    ]
-
-
 
 -- UPDATE
+
+
+type Msg
+    = IntroFormChanged IntroForm.State
+    | FormSaved
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotIntroFormMsg subMsg ->
+        IntroFormChanged introForm ->
+            ( { model | introForm = introForm }, Cmd.none )
+
+        FormSaved ->
             let
-                ( newModel, cmd ) =
-                    handleIntroFormMessage subMsg model
+                store =
+                    model.store
+
+                playerName =
+                    model.introForm |> IntroForm.getName
+
+                modal =
+                    model.modal |> Modal.close
+
+                newStore =
+                    { store | playerName = playerName }
             in
-            ( newModel, cmd )
+            ( { model | store = newStore, modal = modal }, Store.save newStore )
 
 
-handleIntroFormMessage : IntroForm.Msg -> Model -> ( Model, Cmd Msg )
-handleIntroFormMessage subMsg model =
-    let
-        newIntroFormConfig =
-            IntroForm.update subMsg model.introFormConfig
 
-        newPlayerName =
-            case subMsg of
-                IntroForm.SaveName playerName ->
-                    playerName
+-- STYLES
 
-                _ ->
-                    model.store.playerName
 
-        store =
-            model.store
-
-        newStore =
-            { store | playerName = newPlayerName }
-
-        modalConfig =
-            model.modalConfig
-
-        newModalConfig =
-            case subMsg of
-                IntroForm.SaveName _ ->
-                    { modalConfig | isVisible = False }
-
-                _ ->
-                    modalConfig
-
-        cmd =
-            case subMsg of
-                IntroForm.SaveName _ ->
-                    Store.save newStore
-
-                _ ->
-                    Cmd.none
-    in
-    ( { model
-        | store = newStore
-        , introFormConfig = newIntroFormConfig
-        , modalConfig = newModalConfig
-      }
-    , cmd
-    )
+welcomeMessageStyles : List Style
+welcomeMessageStyles =
+    [ fontSize (rem 3)
+    , color (Color.getHexColor Color.theme.neutral.greyDarkest)
+    ]

@@ -1,6 +1,7 @@
-module Components.IntroForm exposing (..)
+module Components.IntroForm exposing (State, getName, init, view)
 
 import Components.Button as Button
+import Components.Modal as Modal
 import Css exposing (Style, alignItems, center, color, column, displayFlex, flexDirection, justifyContent, margin, marginBottom, maxWidth, padding, pct, px, rem, width)
 import Html.Styled exposing (Html, form, h1, input, label, text)
 import Html.Styled.Attributes exposing (css, placeholder, required, value)
@@ -12,22 +13,25 @@ import Theme.Color as Color
 -- MODEl
 
 
-type alias Config =
-    { name : String
-    }
+type State
+    = State
+        { name : String
+        }
 
 
-defaultConfig : Config
-defaultConfig =
-    { name = "" }
+init : State
+init =
+    State
+        { name = ""
+        }
 
 
 
 -- VIEW
 
 
-view : Config -> Html Msg
-view { name } =
+view : (State -> msg) -> msg -> State -> Html msg
+view toMsg saveMsg ((State { name }) as state) =
     let
         title =
             h1 [ css formTitleStyles ] [ text "You're new here! First time?" ]
@@ -38,7 +42,7 @@ view { name } =
                     [ css formInputStyles
                     , value name
                     , placeholder "Please enter your name to continue..."
-                    , onInput ChangeName
+                    , onInput (ChangeName >> (\updatedNameMsg -> update updatedNameMsg state) >> toMsg)
                     , required True
                     ]
                     []
@@ -50,7 +54,7 @@ view { name } =
                     |> Button.withLabel "Continue"
                 )
     in
-    form [ css formStyles, onSubmit (SaveName name) ]
+    form [ css formStyles, onSubmit saveMsg ]
         [ title, nameInput, submitButton ]
 
 
@@ -60,17 +64,13 @@ view { name } =
 
 type Msg
     = ChangeName String
-    | SaveName String
 
 
-update : Msg -> Config -> Config
-update msg config =
+update : Msg -> State -> State
+update msg (State state) =
     case msg of
         ChangeName newName ->
-            { config | name = newName }
-
-        SaveName _ ->
-            config
+            State { state | name = newName }
 
 
 
@@ -107,3 +107,12 @@ formInputStyles =
     , width (pct 100)
     , color (Color.getHexColor Color.theme.neutral.greyDarkest)
     ]
+
+
+
+-- HELPERS
+
+
+getName : State -> String
+getName (State { name }) =
+    name

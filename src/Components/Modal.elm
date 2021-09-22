@@ -1,4 +1,4 @@
-module Components.Modal exposing (Config, defaultConfig, view, withFooter, withHeader)
+module Components.Modal exposing (State, close, init, open, view)
 
 import Components.Icon as Icon
 import Css exposing (Style, alignItems, animationDuration, animationName, auto, backgroundColor, bold, border3, borderBottom3, borderRadius, borderTop3, boxShadow5, center, color, cursor, display, displayFlex, fixed, float, focus, fontSize, fontWeight, height, hover, inline, int, justifyContent, left, margin, maxWidth, minWidth, none, overflow, padding, paddingBottom, pct, pointer, position, px, relative, rem, right, sec, solid, spaceBetween, textDecoration, top, width, zIndex)
@@ -13,11 +13,10 @@ import Theme.Color as Color
 -- MODEL
 
 
-type alias Config msg =
-    { isVisible : Bool
-    , headerConfig : Maybe (HeaderConfig msg)
-    , footerConfig : Maybe (FooterConfig msg)
-    }
+type State
+    = State
+        { isVisible : Bool
+        }
 
 
 type alias HeaderConfig msg =
@@ -31,20 +30,19 @@ type alias FooterConfig msg =
     }
 
 
-defaultConfig : Config msg
-defaultConfig =
-    { isVisible = False
-    , headerConfig = Nothing
-    , footerConfig = Nothing
-    }
+init : State
+init =
+    State
+        { isVisible = False
+        }
 
 
 
 -- VIEW
 
 
-view : List (Html msg) -> Config msg -> Html msg
-view content { isVisible, headerConfig, footerConfig } =
+view : List (Html msg) -> Maybe (HeaderConfig msg) -> Maybe (FooterConfig msg) -> State -> Html msg
+view content headerConfig footerConfig (State { isVisible }) =
     let
         display =
             if isVisible then
@@ -101,16 +99,6 @@ body content =
 footer : FooterConfig msg -> Html msg
 footer { buttons } =
     div [ css modalFooterStyles ] buttons
-
-
-withHeader : Maybe String -> msg -> Config msg -> Config msg
-withHeader maybeTitle closeMsg config =
-    { config | headerConfig = Just (HeaderConfig maybeTitle closeMsg) }
-
-
-withFooter : List (Html msg) -> Config msg -> Config msg
-withFooter buttons config =
-    { config | footerConfig = Just (FooterConfig buttons) }
 
 
 
@@ -215,3 +203,17 @@ modalFooterStyles =
     [ padding (rem 1)
     , borderTop3 (px 1) solid (Color.getHexColor Color.theme.neutral.grey)
     ]
+
+
+
+-- HELPERS
+
+
+open : State -> State
+open (State state) =
+    State { state | isVisible = True }
+
+
+close : State -> State
+close (State state) =
+    State { state | isVisible = False }
